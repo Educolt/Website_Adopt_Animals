@@ -18,7 +18,7 @@ import {
 import { Input } from '../../components/Input';
 
 //@types
-import { IModalProps, IUser } from '../../@types';
+import { IModalProps } from '../../@types';
 
 // import service api
 import { api } from '../../services/api';
@@ -32,13 +32,12 @@ Modal.setAppElement("#root");
 
 export const RegisterAnimalModal = ({modalIsOpen, callback}: IModalProps): JSX.Element => {
 
-    const {updateUser, users} = useAuth();
-
     // form input states
     const [name, setName] = useState("");
     const [description, setDescription] = useState("");
-
-    const maxDate = new Date().toISOString().split("T")[0];
+    const today = new Date();
+    const lastYear = new Date(today.setFullYear(today.getFullYear() - 1));
+    const maxDate = lastYear.toISOString().split("T")[0];
     const [category, setCategory] = useState("");
 
     const [date, setDate] = useState("");
@@ -46,14 +45,29 @@ export const RegisterAnimalModal = ({modalIsOpen, callback}: IModalProps): JSX.E
     const [getLogoToSend, setLogoToSend] = useState<any>();
     const [getLogoName, setLogoName] = useState<string>("");
 
+    function calculateAge(bornAt: string) {
+        const birthDate = new Date(bornAt);
+        const today = new Date();
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const monthDifference = today.getMonth() - birthDate.getMonth();
+        
+        if (monthDifference < 0 || (monthDifference === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+        }
+    
+        return age;
+    }
+
     const handleSubmit = async (event: FormEvent) => {
         event.preventDefault();
-
         const data = {
             name,
             description,
-            date,
-            category
+            bornAt: new Date(date),
+            age: calculateAge(date),
+            category,
+            status: true,
+            imageUrl: "",
         }
 
         if((description === '' || date === '') || (name === '' || category === '')) {
@@ -70,16 +84,34 @@ export const RegisterAnimalModal = ({modalIsOpen, callback}: IModalProps): JSX.E
             return;
         }
 
-        await api.post('/animal/register',data);
+        const res = await api.post('/animal/register',data);
+        const id = res.data.id;
 
+        await uploadAnimalProfile(id, getLogoToSend)
         callback();
-        updateUser();
+    }
+
+    async function uploadAnimalProfile(id: string, file: any) {
+        const formData = new FormData();
+        
+        formData.append('animalProfile', file);
+        
+        try {
+            const response = await api.post(`/animal/upload/${id}`, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+            console.log('Resposta do servidor:', response.data);
+        } catch (error) {
+            console.error('Erro ao enviar o arquivo:', error);
+        }
     }
 
     const onLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
           let img = e.target.files[0];
-          setLogo(URL.createObjectURL(img));
+          setLogoToSend(img)
         }
       };
 
@@ -156,8 +188,8 @@ export const RegisterAnimalModal = ({modalIsOpen, callback}: IModalProps): JSX.E
                         <option value="" disabled>
                             (selecionar)
                         </option>
-                        <option value="Cat">Gato</option>
-                        <option value="Dog">Cachorro</option>
+                        <option value="cat">Gato</option>
+                        <option value="dog">Cachorro</option>
                     </Select>
 
                     <Input

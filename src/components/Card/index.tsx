@@ -13,7 +13,9 @@ import {
     Description,
     ImageContainer,
     Status,
-    ImageWrapper
+    ImageWrapper,
+    PetIcon,
+    IconContainer
 } from './styles';
 
 
@@ -21,16 +23,28 @@ import {
 import { api } from '../../services/api';
 import { useState } from 'react';
 
-import CelesteImg from '../../assets/celeste.jpg'
-
 export const Card = ({...rest}): JSX.Element => {
 
-    const [status, setStatus] = useState(true);
+    const [status, setStatus] = useState(rest.data.status);
+        
 
     // handle exclude user button click event
     const handleExcludeUserClick = async () => {
-        try {
+       /*  try {
             await api.delete(`/animal/${rest.data.id}`) 
+        } catch (error) {
+            console.log(error);
+        } */
+    }
+
+    const handleUpdateStatus = async () => {
+        try {
+            const res = await api.put(`/animal/status/${rest.data.id}`, {
+                status: !status
+            });
+
+            setStatus(res.data.status)
+            await rest.callback();
         } catch (error) {
             console.log(error);
         }
@@ -40,8 +54,13 @@ export const Card = ({...rest}): JSX.Element => {
         <Container>
             <Wrapper>
                 <ImageWrapper>
-                    <ImageContainer src={CelesteImg} />
-                    {!status ? (
+                    {rest.data.imageUrl === "" ? (
+                        <IconContainer>
+                            <PetIcon color='#eb9091' size={32}/>
+                        </IconContainer>
+                    ) : <ImageContainer src={rest.data.imageUrl} />}
+                    
+                    {rest.data.status ? (
                         <Status className='available'>
                         Disponivel
                     </Status>
@@ -53,25 +72,28 @@ export const Card = ({...rest}): JSX.Element => {
                 </ImageWrapper>
                 <UserInfo>
                     <Name>
-                        Nick
-                        <DogIcon color='#eb9091' size={20}/> 
+                        {rest.data.name}
+                        {rest.data.category === "dog" && <DogIcon color='#eb9091' size={20}/> }
+                        {rest.data.category === "cat" && <CatIcon color='#eb9091' size={20}/> }
                     </Name>
                     <Age>
-                        14 anos
+                    {rest.data.age} anos
                     </Age>
                     <Description>
-                        daksdjnasdjnaksdjnaksdjnaksjdn
+                        {rest.data.description}
                     </Description>
                     <CreatedAt>
                         
                         <strong>
                         {
-                            new Date(Date.now()).toDateString()
+                            new Date(rest.data.bornAt).toLocaleDateString("pt-Br")
                         } 
                         </strong>
 
                         <div style={{display: 'flex', alignItems: 'baseline', gap: '.2rem'}}>
-                            <input type="checkbox" id="status" name="status" checked={status}  onClick={() => setStatus(!status)}/>
+                            <input type="checkbox" id="status" name="status" checked={status}  onClick={() => {
+                                handleUpdateStatus();
+                            }}/>
                             <label htmlFor="scales">Mudar status</label>
                         </div>
                     </CreatedAt>

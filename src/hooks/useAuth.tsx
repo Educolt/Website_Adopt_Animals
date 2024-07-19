@@ -15,11 +15,7 @@ const AuthProvider = ({children}: IAuthProviderProps) => {
     useEffect(() => {
         // get user registered
         const loadUser = async () => {
-            const response = await api.get('/user');
-
-            const data = response.data;
-
-            setUsers(data)
+            
         } 
         loadUser();
     }, [users]);

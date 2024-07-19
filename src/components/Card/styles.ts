@@ -2,6 +2,25 @@ import styled from 'styled-components';
 
 import { CgClose } from "react-icons/cg";
 import { FaCat, FaDog } from "react-icons/fa";
+import { MdOutlinePets } from "react-icons/md";
+
+export const PetIcon = styled(MdOutlinePets)`
+
+    &:hover {
+        opacity: 0.8;
+    }
+`;
+
+export const IconContainer = styled.div`
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    border: 1px solid #d2d2d2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 10px;
+`;
 
 export const CloseIcon = styled(CgClose)`
     position: relative;
@@ -95,6 +114,11 @@ export const ImageContainer = styled.img`
     border: 1px solid #d2d2d2;
     object-fit: cover;
     margin-right: 10px;
+    transition: 500ms ease-in-out;
+
+    &:hover {
+        opacity: 0.8;
+    }
 `;
 export const CreatedAt = styled.span`
     color: #7b7c7c;
